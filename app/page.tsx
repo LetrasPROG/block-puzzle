@@ -74,7 +74,7 @@ export default function Home() {
 
   const currentPieceRef = useRef(currentPiece);
   const piecePositionRef = useRef(piecePosition);
-  const boardRef = useRef(board);
+  const boardRef = useRef<(string | null)[][]>(board);
 
   useEffect(() => {
     currentPieceRef.current = currentPiece;
@@ -87,6 +87,83 @@ export default function Home() {
   useEffect(() => {
     boardRef.current = boardRef;
   }, [boardRef]);
+
+  // Validador de posición
+  const isValidPosition = (
+    piece: PieceType,
+    pos: { x: number; y: number },
+    boardToCheck: (string | null)[][],
+  ): boolean => {
+    // hacemos un recorrido por la matriz de la pieza
+    for (let r = 0; r < piece.shape.length; r++) {
+      for (let c = 0; c < piece.shape[r].length; c++) {
+        if (piece.shape[r][c] === 1) {
+          const boardX = pos.x + c;
+          const boardY = pos.y + r;
+
+          // Detectamos las paredes laterales y el piso
+          if (boardX < 0 || boardX >= COLS || boardY >= ROWS) {
+            return false;
+          }
+
+          // Detectamos si la pieza está por encima del techo
+          if (boardY < 0) continue;
+
+          // Detectamos si hay colisión con otro bloque fijo del tablero (no está vacío en ese espacio)
+          if (boardToCheck[boardY][boardX] !== null) {
+            return false;
+          }
+        }
+      }
+    }
+
+    // Si pasó todas las pruebas es una posición válida
+    return true;
+  };
+
+  // Colocar pieza y spawnear nueva
+  const lockPiece = () => {
+    const piece = currentPieceRef.current;
+    const pos = piecePositionRef.current;
+    const currentBoard = boardRef.current;
+
+    if (!piece) return;
+
+    // Copia del tablero y ponemos pieza actual
+    const newBoard = currentBoard.map((row) => [...row]);
+    const { shape, color } = piece;
+    const { x, y } = pos;
+
+    for (let r = 0; r < piece.shape.length; r++) {
+      for (let c = 0; c < piece.shape[r].length; c++) {
+        if (shape[r][c] === 1) {
+          const boardY = y + r;
+          const boardX = x + c;
+          if (boardY >= 0 && boardY < ROWS && boardX >= 0 && boardX < COLS) {
+            newBoard[boardY][boardX] = color;
+          }
+        }
+      }
+    }
+
+    // Actualizamos el estado del tablero
+    setBoard(newBoard);
+
+    // Generamos nueva pieza
+    const randomIndex = Math.floor(Math.random() * PIECES.length);
+    const newPiece = PIECES[randomIndex];
+    const spawnPos = { x: Math.floor(COLS / 2) - 1, y: 0 };
+
+    // Validamos si cabe la nueva pieza
+    if (!isValidPosition(newPiece, spawnPos, newBoard)) {
+      setBoard(Array.from({ length: ROWS }, () => Array(COLS).fill(null)));
+      setCurrentPiece(null);
+      alert("¡Se acabó el Juego! 💀 Recarga la página para volver a empezar");
+    } else {
+      setCurrentPiece(newPiece);
+      setPiecePosition(spawnPos);
+    }
+  };
 
   // Funciones de dibujado
   const drawBoard = (context: CanvasRenderingContext2D) => {
@@ -144,100 +221,25 @@ export default function Home() {
     }
   };
 
-  // Colocar pieza y spawnear nueva
-  const lockPiece = () => {
-    const piece = currentPieceRef.current;
-    const pos = piecePositionRef.current;
-    const currentBoard = boardRef.current;
-
-    if (!piece) return;
-
-    // Copia del tablero y ponemos pieza actual
-    const newBoard = currentBoard.map((row) => [...row]);
-    const { shape, color } = piece;
-    const { x, y } = pos;
-
-    for (let r = 0; r < piece.shape.length; r++) {
-      for (let c = 0; c < piece.shape[r].length; c++) {
-        if (shape[r][c] === 1) {
-          const boardY = y + r;
-          const boardX = x + c;
-          if (boardY >= 0 && boardY < ROWS && boardX >= 0 && boardX < COLS) {
-            newBoard[boardY][boardX] = color;
-          }
-        }
-      }
-    }
-
-    // Actualizamos el estado del tablero
-    setBoard(newBoard);
-
-    // Generamos nueva pieza
-    const randomIndex = Math.floor(Math.random() * PIECES.length);
-    const newPiece = PIECES[randomIndex];
-    const spawnPos = { x: Math.floor(COLS / 2) - 1, y: 0 };
-
-    // Validamos si cabe la nueva pieza
-    if (!isValidPosition(newPiece, spawnPos, newBoard)) {
-      setBoard(Array.from({ length: ROWS }, () => Array(COLS).fill(null)));
-      setCurrentPiece(null);
-      alert("¡Se acabó el Juego! 💀 Recarga la página para volver a empezar");
-    } else {
-      setCurrentPiece(newPiece);
-      setPiecePosition(spawnPos);
-    }
-  };
-
-  // Función Sapwner
-  const spawnPiece = () => {
-    const randomIndex = Math.floor(Math.random() * PIECES.length);
-    setCurrentPiece(PIECES[randomIndex]);
-    setPiecePosition({ x: Math.floor(COLS / 2) - 1, y: 0 });
-  };
-
-  // Validador de posición
-  const isValidPosition = (
-    piece: PieceType,
-    pos: { x: number; y: number },
-    boardToCheck: (string | null)[][],
-  ): boolean => {
-    // hacemos un recorrido por la matriz de la pieza
-    for (let r = 0; r < piece.shape.length; r++) {
-      for (let c = 0; c < piece.shape[r].length; c++) {
-        if (piece.shape[r][c] === 1) {
-          const boardX = pos.x + c;
-          const boardY = pos.y + r;
-
-          // Detectamos las paredes laterales y el piso
-          if (boardX < 0 || boardX >= COLS || boardY >= ROWS) {
-            return false;
-          }
-
-          // Detectamos si la pieza está por encima del techo
-          if (boardY < 0) continue;
-
-          // Detectamos si hay colisión con otro bloque fijo del tablero (no está vacío en ese espacio)
-          if (boardToCheck[boardY][boardX] !== null) {
-            return false;
-          }
-        }
-      }
-    }
-
-    // Si pasó todas las pruebas es una posición válida
-    return true;
-  };
+  // // Función Sapwner
+  // const spawnPiece = () => {
+  //   const randomIndex = Math.floor(Math.random() * PIECES.length);
+  //   setCurrentPiece(PIECES[randomIndex]);
+  //   setPiecePosition({ x: Math.floor(COLS / 2) - 1, y: 0 });
+  // };
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const context = canvas.getContext("2d");
     if (!context) return;
-
     setCtx(context);
 
-    spawnPiece();
+    // Generar primera pieza
+    const randomIndex = Math.floor(Math.random() * PIECES.length);
+    const firstPiece = PIECES[randomIndex];
+    setCurrentPiece(firstPiece);
+    setPiecePosition({ x: Math.floor(COLS / 2) - 1, y: 0 });
 
     // tiempo de caída
     const interval = setInterval(() => {
@@ -320,6 +322,9 @@ export default function Home() {
           width={COLS * BLOCK_SIZE}
           height={ROWS * BLOCK_SIZE}
         ></canvas>
+        <p className="mt-4 text-sm text-gray-500">
+          Usa las flechas de ← → ↓ para mover
+        </p>
       </div>
     </div>
   );
