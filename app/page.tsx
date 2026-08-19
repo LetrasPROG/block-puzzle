@@ -160,8 +160,9 @@ export default function Home() {
       }
     }
 
-    // Actualizamos el estado del tablero
-    setBoard(newBoard);
+    // Elimina las filas completas
+    const clearedBoard = clearFullRows(newBoard);
+    setBoard(clearedBoard);
 
     // Generamos nueva pieza
     const randomIndex = Math.floor(Math.random() * PIECES.length);
@@ -169,7 +170,7 @@ export default function Home() {
     const spawnPos = { x: Math.floor(COLS / 2) - 1, y: 0 };
 
     // Validamos si cabe la nueva pieza
-    if (!isValidPosition(newPiece, spawnPos, newBoard)) {
+    if (!isValidPosition(newPiece, spawnPos, clearedBoard)) {
       setBoard(Array.from({ length: ROWS }, () => Array(COLS).fill(null)));
       setCurrentPiece(null);
       alert("¡Se acabó el Juego! 💀 Recarga la página para volver a empezar");
@@ -177,6 +178,22 @@ export default function Home() {
       setCurrentPiece(newPiece);
       setPiecePosition(spawnPos);
     }
+  };
+
+  const clearFullRows = (
+    currentBoard: (string | null)[][],
+  ): (string | null)[][] => {
+    const newBoard = currentBoard.filter((row) =>
+      row.some((cell) => cell === null),
+    );
+
+    const removedRows = ROWS - newBoard.length;
+
+    const emptyRows = Array.from({ length: removedRows }, () =>
+      Array(COLS).fill(null),
+    );
+
+    return [...emptyRows, ...newBoard];
   };
 
   // Funciones de dibujado
