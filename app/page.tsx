@@ -78,15 +78,15 @@ export default function Home() {
 
   useEffect(() => {
     currentPieceRef.current = currentPiece;
-  }, [currentPieceRef]);
+  }, [currentPiece]);
 
   useEffect(() => {
-    piecePositionRef.current = piecePositionRef;
-  }, [piecePositionRef]);
+    piecePositionRef.current = piecePosition;
+  }, [piecePosition]);
 
   useEffect(() => {
-    boardRef.current = boardRef;
-  }, [boardRef]);
+    boardRef.current = board;
+  }, [board]);
 
   // Validador de posición
   const isValidPosition = (
@@ -221,13 +221,6 @@ export default function Home() {
     }
   };
 
-  // // Función Sapwner
-  // const spawnPiece = () => {
-  //   const randomIndex = Math.floor(Math.random() * PIECES.length);
-  //   setCurrentPiece(PIECES[randomIndex]);
-  //   setPiecePosition({ x: Math.floor(COLS / 2) - 1, y: 0 });
-  // };
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -268,7 +261,7 @@ export default function Home() {
       switch (e.key) {
         case "ArrowLeft": {
           const newPos = { x: pos.x - 1, y: pos.y };
-          if (isValidPosition(piece, pos, currentBoard)) {
+          if (isValidPosition(piece, newPos, currentBoard)) {
             setPiecePosition(newPos);
           }
           e.preventDefault();
@@ -276,7 +269,7 @@ export default function Home() {
         }
         case "ArrowRight": {
           const newPos = { x: pos.x + 1, y: pos.y };
-          if (isValidPosition(piece, pos, currentBoard)) {
+          if (isValidPosition(piece, newPos, currentBoard)) {
             setPiecePosition(newPos);
           }
           e.preventDefault();
@@ -284,7 +277,7 @@ export default function Home() {
         }
         case "ArrowDown": {
           const newPos = { x: pos.x, y: pos.y + 1 };
-          if (isValidPosition(piece, pos, currentBoard)) {
+          if (isValidPosition(piece, newPos, currentBoard)) {
             setPiecePosition(newPos);
           }
           e.preventDefault();
