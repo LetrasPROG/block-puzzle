@@ -72,6 +72,22 @@ export default function Home() {
   const [currentPiece, setCurrentPiece] = useState<PieceType | null>(null);
   const [piecePosition, setPiecePosition] = useState({ x: 0, y: 0 });
 
+  const currentPieceRef = useRef(currentPiece);
+  const piecePositionRef = useRef(piecePosition);
+  const boardRef = useRef(board);
+
+  useEffect(() => {
+    currentPieceRef.current = currentPiece;
+  }, [currentPieceRef]);
+
+  useEffect(() => {
+    piecePositionRef.current = piecePositionRef;
+  }, [piecePositionRef]);
+
+  useEffect(() => {
+    boardRef.current = boardRef;
+  }, [boardRef]);
+
   // Funciones de dibujado
   const drawBoard = (context: CanvasRenderingContext2D) => {
     context.clearRect(0, 0, COLS * BLOCK_SIZE, ROWS * BLOCK_SIZE);
@@ -128,11 +144,88 @@ export default function Home() {
     }
   };
 
+  // Colocar pieza y spawnear nueva
+  const lockPiece = () => {
+    const piece = currentPieceRef.current;
+    const pos = piecePositionRef.current;
+    const currentBoard = boardRef.current;
+
+    if (!piece) return;
+
+    // Copia del tablero y ponemos pieza actual
+    const newBoard = currentBoard.map((row) => [...row]);
+    const { shape, color } = piece;
+    const { x, y } = pos;
+
+    for (let r = 0; r < piece.shape.length; r++) {
+      for (let c = 0; c < piece.shape[r].length; c++) {
+        if (shape[r][c] === 1) {
+          const boardY = y + r;
+          const boardX = x + c;
+          if (boardY >= 0 && boardY < ROWS && boardX >= 0 && boardX < COLS) {
+            newBoard[boardY][boardX] = color;
+          }
+        }
+      }
+    }
+
+    // Actualizamos el estado del tablero
+    setBoard(newBoard);
+
+    // Generamos nueva pieza
+    const randomIndex = Math.floor(Math.random() * PIECES.length);
+    const newPiece = PIECES[randomIndex];
+    const spawnPos = { x: Math.floor(COLS / 2) - 1, y: 0 };
+
+    // Validamos si cabe la nueva pieza
+    if (!isValidPosition(newPiece, spawnPos, newBoard)) {
+      setBoard(Array.from({ length: ROWS }, () => Array(COLS).fill(null)));
+      setCurrentPiece(null);
+      alert("¡Se acabó el Juego! 💀 Recarga la página para volver a empezar");
+    } else {
+      setCurrentPiece(newPiece);
+      setPiecePosition(spawnPos);
+    }
+  };
+
   // Función Sapwner
   const spawnPiece = () => {
     const randomIndex = Math.floor(Math.random() * PIECES.length);
     setCurrentPiece(PIECES[randomIndex]);
     setPiecePosition({ x: Math.floor(COLS / 2) - 1, y: 0 });
+  };
+
+  // Validador de posición
+  const isValidPosition = (
+    piece: PieceType,
+    pos: { x: number; y: number },
+    boardToCheck: (string | null)[][],
+  ): boolean => {
+    // hacemos un recorrido por la matriz de la pieza
+    for (let r = 0; r < piece.shape.length; r++) {
+      for (let c = 0; c < piece.shape[r].length; c++) {
+        if (piece.shape[r][c] === 1) {
+          const boardX = pos.x + c;
+          const boardY = pos.y + r;
+
+          // Detectamos las paredes laterales y el piso
+          if (boardX < 0 || boardX >= COLS || boardY >= ROWS) {
+            return false;
+          }
+
+          // Detectamos si la pieza está por encima del techo
+          if (boardY < 0) continue;
+
+          // Detectamos si hay colisión con otro bloque fijo del tablero (no está vacío en ese espacio)
+          if (boardToCheck[boardY][boardX] !== null) {
+            return false;
+          }
+        }
+      }
+    }
+
+    // Si pasó todas las pruebas es una posición válida
+    return true;
   };
 
   useEffect(() => {
@@ -148,33 +241,73 @@ export default function Home() {
 
     // tiempo de caída
     const interval = setInterval(() => {
-      setPiecePosition((prev) => ({ ...prev, y: prev.y + 1 }));
+      const piece = currentPieceRef.current;
+      const pos = piecePositionRef.current;
+      const currentBoard = boardRef.current;
+
+      if (!piece) return;
+
+      const newPos = { x: pos.x, y: pos.y + 1 };
+      if (isValidPosition(piece, newPos, currentBoard)) {
+        setPiecePosition(newPos);
+      } else {
+        lockPiece();
+      }
     }, 500);
 
-    return clearInterval(interval);
+    // Controles del teclado
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const piece = currentPieceRef.current;
+      const pos = piecePositionRef.current;
+      const currentBoard = boardRef.current;
+
+      if (!piece) return;
+
+      switch (e.key) {
+        case "ArrowLeft": {
+          const newPos = { x: pos.x - 1, y: pos.y };
+          if (isValidPosition(piece, pos, currentBoard)) {
+            setPiecePosition(newPos);
+          }
+          e.preventDefault();
+          break;
+        }
+        case "ArrowRight": {
+          const newPos = { x: pos.x + 1, y: pos.y };
+          if (isValidPosition(piece, pos, currentBoard)) {
+            setPiecePosition(newPos);
+          }
+          e.preventDefault();
+          break;
+        }
+        case "ArrowDown": {
+          const newPos = { x: pos.x, y: pos.y + 1 };
+          if (isValidPosition(piece, pos, currentBoard)) {
+            setPiecePosition(newPos);
+          }
+          e.preventDefault();
+          break;
+        }
+        case "ArrowUp": {
+          // Aquí meteremos la rotación
+          e.preventDefault();
+          break;
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
 
   useEffect(() => {
     if (!ctx) return;
     drawBoard(ctx);
   }, [ctx, board, currentPiece, piecePosition]);
-
-  // const drawPiece = (context: CanvasRenderingContext2D, piece: any) => {
-  //   const blockSize = 25;
-  //   piece.shape.forEach((row: number[], y: number) => {
-  //     row.forEach((cell: number, x: number) => {
-  //       if (cell) {
-  //         context.fillStyle = piece.color;
-  //         context.fillRect(
-  //           (piece.x + x) * blockSize,
-  //           (piece.y + y) * blockSize,
-  //           blockSize - 1,
-  //           blockSize - 1,
-  //         );
-  //       }
-  //     });
-  //   });
-  // };
 
   return (
     <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
