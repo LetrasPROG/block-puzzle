@@ -61,6 +61,21 @@ const PIECES: PieceType[] = [
   }, //J
 ];
 
+const rotateMatrix = (matrix: number[][]): number[][] => {
+  const rows = matrix.length;
+  const cols = matrix[0].length;
+  const rotated: number[][] = [];
+
+  for (let newRow = 0; newRow < cols; newRow++) {
+    rotated[newRow] = [];
+    for (let newCol = 0; newCol < rows; newCol++) {
+      rotated[newRow][newCol] = matrix[rows - 1 - newCol][newRow];
+    }
+  }
+
+  return rotated;
+};
+
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
@@ -68,7 +83,6 @@ export default function Home() {
   const [board, setBoard] = useState<(string | null)[][]>(() =>
     Array.from({ length: ROWS }, () => Array(COLS).fill(null)),
   );
-
   const [currentPiece, setCurrentPiece] = useState<PieceType | null>(null);
   const [piecePosition, setPiecePosition] = useState({ x: 0, y: 0 });
 
@@ -284,7 +298,30 @@ export default function Home() {
           break;
         }
         case "ArrowUp": {
-          // Aquí meteremos la rotación
+          const piece = currentPieceRef.current;
+          const pos = piecePositionRef.current;
+          if (!piece) return;
+
+          const rotatedShape = rotateMatrix(piece.shape);
+          const rotatedPiece: PieceType = {
+            shape: rotatedShape,
+            color: piece.color,
+          };
+
+          // Efecto Wall-Kick
+          const attempts = [
+            pos,
+            { x: pos.x - 1, y: pos.y }, //Izq
+            { x: pos.x + 1, y: pos.y }, //Der
+          ];
+
+          for (const attempt of attempts) {
+            if (isValidPosition(rotatedPiece, attempt, boardRef.current)) {
+              setCurrentPiece(rotatedPiece);
+              setPiecePosition(attempt);
+              break;
+            }
+          }
           e.preventDefault();
           break;
         }
@@ -315,10 +352,10 @@ export default function Home() {
           width={COLS * BLOCK_SIZE}
           height={ROWS * BLOCK_SIZE}
         ></canvas>
-        <p className="mt-4 text-sm text-gray-500">
-          Usa las flechas de ← → ↓ para mover
-        </p>
       </div>
+      <p className="mt-4 text-sm text-gray-500">
+        Usa las flechas de ← → ↓ para mover, y ↑ para rotar
+      </p>
     </div>
   );
 }
