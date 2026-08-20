@@ -1,13 +1,12 @@
 "use client";
 
-import NextPiece from "@/components/next-piece";
 import { useState, useEffect, useRef } from "react";
 
 // Parámetros fijos del tablero
 const COLS = 10;
 const ROWS = 20;
 const SUPPORT_COLS = COLS / 2;
-const SUPPORT_ROWS = ROWS / 4;
+const SUPPORT_ROWS = ROWS / 5;
 const BLOCK_SIZE = 25;
 
 // Tipado de piezas
@@ -91,16 +90,19 @@ export default function Home() {
   );
   const [currentPiece, setCurrentPiece] = useState<PieceType | null>(null);
   const [piecePosition, setPiecePosition] = useState({ x: 0, y: 0 });
-  const [staticPosition, setStaticPosition] = useState({ x: 0, y: 0 });
+  const [pieceCheck, setPieceCheck] = useState(0);
+  const [staticPosition, setStaticPosition] = useState({ x: 1, y: 1 });
 
   const [nextPiece, setNextPiece] = useState<PieceType | null>(null);
 
   const mainCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const supportCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const currentPieceRef = useRef(currentPiece);
+  const nextPieceRef = useRef(nextPiece);
+  const pieceCheckRef = useRef(pieceCheck);
   const piecePositionRef = useRef(piecePosition);
   const boardRef = useRef<(string | null)[][]>(board);
-  const supportBoardRef = useRef<(string | null)[][]>(supportBoard);
+  // const supportBoardRef = useRef<(string | null)[][]>(supportBoard);
 
   useEffect(() => {
     currentPieceRef.current = currentPiece;
@@ -113,6 +115,14 @@ export default function Home() {
   useEffect(() => {
     boardRef.current = board;
   }, [board]);
+
+  useEffect(() => {
+    nextPieceRef.current = nextPiece;
+  }, [nextPiece]);
+
+  useEffect(() => {
+    pieceCheckRef.current = pieceCheck;
+  }, [pieceCheck]);
 
   // Validador de posición
   const isValidPosition = (
@@ -145,6 +155,16 @@ export default function Home() {
 
     // Si pasó todas las pruebas es una posición válida
     return true;
+  };
+
+  // Verificamos si hay pieza siguiente
+  const checkNextPiece = () => {
+    if (pieceCheckRef.current === 0) {
+      const randomIndex = Math.floor(Math.random() * PIECES.length);
+      const newPiece = PIECES[randomIndex];
+      setPieceCheck(1);
+      setNextPiece(newPiece);
+    }
   };
 
   // Colocar pieza y spawnear nueva
@@ -184,21 +204,22 @@ export default function Home() {
       setScore((prev) => prev + addScore);
     }
 
-    // Generamos nueva pieza
+    // Lanzamos Generamos nueva pieza
+    const spawnPos = { x: Math.floor(COLS / 2) - 1, y: 0 };
     const randomIndex = Math.floor(Math.random() * PIECES.length);
     const newPiece = PIECES[randomIndex];
-    setNextPiece(newPiece);
-    const spawnPos = { x: Math.floor(COLS / 2) - 1, y: 0 };
+    const nextPiece = nextPieceRef.current ? nextPieceRef.current : newPiece;
 
     // Validamos si cabe la nueva pieza
-    if (!isValidPosition(newPiece, spawnPos, clearedBoard)) {
+    if (!isValidPosition(nextPiece, spawnPos, clearedBoard)) {
       setBoard(Array.from({ length: ROWS }, () => Array(COLS).fill(null)));
       setCurrentPiece(null);
       setNextPiece(null);
       alert("¡Se acabó el Juego! 💀 Recarga la página para volver a empezar");
     } else {
-      setCurrentPiece(newPiece);
+      setCurrentPiece(nextPiece);
       setPiecePosition(spawnPos);
+      setPieceCheck(0);
     }
   };
 
@@ -334,6 +355,7 @@ export default function Home() {
     }
   };
 
+  // Dibujamos el canvas para mostrar pieza siguiente
   useEffect(() => {
     const canvas = supportCanvasRef.current;
     if (!canvas) return;
@@ -341,11 +363,10 @@ export default function Home() {
     setSupCtx(context);
   }, []);
 
+  // Dibujamos el tablero de juego principal
   useEffect(() => {
     const canvas = mainCanvasRef.current;
     if (!canvas) return;
-    const showBoard = supportCanvasRef.current;
-    if (!showBoard) return;
     const context = canvas.getContext("2d");
     if (!context) return;
     setCtx(context);
@@ -367,6 +388,7 @@ export default function Home() {
       const newPos = { x: pos.x, y: pos.y + 1 };
       if (isValidPosition(piece, newPos, currentBoard)) {
         setPiecePosition(newPos);
+        checkNextPiece();
       } else {
         lockPiece();
       }
@@ -459,13 +481,16 @@ export default function Home() {
       <h1 className="text-2xl mb-4">Block Puzzle</h1>
       <p className="mt-0 text-lg text-gray-100">Puntuación: {score}</p>
       <div className="p-2">
-        <canvas
-          className="bg-gray-800 border-2 border-gray-600 absolute left-66"
-          ref={supportCanvasRef}
-          width={SUPPORT_COLS * BLOCK_SIZE}
-          height={SUPPORT_ROWS * BLOCK_SIZE}
-          id="support_canvas"
-        ></canvas>
+        <div className="absolute left-66 top-31">
+          <p className="mb-2 text-lg text-gray-100">Siguiente pieza</p>
+          <canvas
+            className="bg-gray-800 border-2 border-gray-600"
+            ref={supportCanvasRef}
+            width={SUPPORT_COLS * BLOCK_SIZE}
+            height={SUPPORT_ROWS * BLOCK_SIZE}
+            id="support_canvas"
+          ></canvas>
+        </div>
         <canvas
           ref={mainCanvasRef}
           className="bg-gray-800 border-2 border-gray-600"
