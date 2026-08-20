@@ -6,6 +6,8 @@ import { useState, useEffect, useRef } from "react";
 // Parámetros fijos del tablero
 const COLS = 10;
 const ROWS = 20;
+const SUPPORT_COLS = COLS / 2;
+const SUPPORT_ROWS = ROWS / 4;
 const BLOCK_SIZE = 25;
 
 // Tipado de piezas
@@ -80,11 +82,16 @@ const rotateMatrix = (matrix: number[][]): number[][] => {
 export default function Home() {
   const [score, setScore] = useState(0);
   const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
+  const [supCtx, setSupCtx] = useState<CanvasRenderingContext2D | null>(null);
   const [board, setBoard] = useState<(string | null)[][]>(() =>
     Array.from({ length: ROWS }, () => Array(COLS).fill(null)),
   );
+  const [supportBoard, setSupportBoard] = useState<(string | null)[][]>(() =>
+    Array.from({ length: SUPPORT_ROWS }, () => Array(SUPPORT_COLS).fill(null)),
+  );
   const [currentPiece, setCurrentPiece] = useState<PieceType | null>(null);
   const [piecePosition, setPiecePosition] = useState({ x: 0, y: 0 });
+  const [staticPosition, setStaticPosition] = useState({ x: 0, y: 0 });
 
   const [nextPiece, setNextPiece] = useState<PieceType | null>(null);
 
@@ -93,6 +100,7 @@ export default function Home() {
   const currentPieceRef = useRef(currentPiece);
   const piecePositionRef = useRef(piecePosition);
   const boardRef = useRef<(string | null)[][]>(board);
+  const supportBoardRef = useRef<(string | null)[][]>(supportBoard);
 
   useEffect(() => {
     currentPieceRef.current = currentPiece;
@@ -179,12 +187,14 @@ export default function Home() {
     // Generamos nueva pieza
     const randomIndex = Math.floor(Math.random() * PIECES.length);
     const newPiece = PIECES[randomIndex];
+    setNextPiece(newPiece);
     const spawnPos = { x: Math.floor(COLS / 2) - 1, y: 0 };
 
     // Validamos si cabe la nueva pieza
     if (!isValidPosition(newPiece, spawnPos, clearedBoard)) {
       setBoard(Array.from({ length: ROWS }, () => Array(COLS).fill(null)));
       setCurrentPiece(null);
+      setNextPiece(null);
       alert("¡Se acabó el Juego! 💀 Recarga la página para volver a empezar");
     } else {
       setCurrentPiece(newPiece);
@@ -206,6 +216,66 @@ export default function Home() {
     const newBoard = [...emptyRows, ...nonFullRows];
 
     return { board: newBoard, rowsCleared };
+  };
+
+  const drawSupBoard = (context: CanvasRenderingContext2D) => {
+    context.clearRect(
+      0,
+      0,
+      SUPPORT_COLS * BLOCK_SIZE,
+      SUPPORT_ROWS * BLOCK_SIZE,
+    );
+
+    // Elementos estáticos del 2do canvas
+    for (let row = 0; row < SUPPORT_ROWS; row++) {
+      for (let col = 0; col < SUPPORT_COLS; col++) {
+        const color = supportBoard[row][col];
+        if (color) {
+          context.fillStyle = color;
+          context.fillRect(
+            col * BLOCK_SIZE,
+            row * BLOCK_SIZE,
+            BLOCK_SIZE - 1,
+            BLOCK_SIZE - 1,
+          );
+        }
+      }
+    }
+
+    // Cuadrícula
+    context.strokeStyle = "#444";
+    context.lineWidth = 0.5;
+    for (let i = 0; i < SUPPORT_COLS; i++) {
+      context.beginPath();
+      context.moveTo(i * BLOCK_SIZE, 0);
+      context.lineTo(i * BLOCK_SIZE, SUPPORT_ROWS * BLOCK_SIZE);
+      context.stroke();
+    }
+    for (let i = 0; i < SUPPORT_ROWS; i++) {
+      context.beginPath();
+      context.moveTo(0, i * BLOCK_SIZE);
+      context.lineTo(SUPPORT_COLS * BLOCK_SIZE, i * BLOCK_SIZE);
+      context.stroke();
+    }
+
+    // Siguiente pieza
+    if (nextPiece) {
+      const { shape, color } = nextPiece;
+      const { x, y } = staticPosition;
+      context.fillStyle = color;
+      for (let r = 0; r < shape.length; r++) {
+        for (let c = 0; c < shape[r].length; c++) {
+          if (shape[r][c] === 1) {
+            context.fillRect(
+              (x + c) * BLOCK_SIZE,
+              (y + r) * BLOCK_SIZE,
+              BLOCK_SIZE - 1,
+              BLOCK_SIZE - 1,
+            );
+          }
+        }
+      }
+    }
   };
 
   // Funciones de dibujado
@@ -265,12 +335,17 @@ export default function Home() {
   };
 
   useEffect(() => {
+    const canvas = supportCanvasRef.current;
+    if (!canvas) return;
+    const context = canvas.getContext("2d");
+    setSupCtx(context);
+  }, []);
+
+  useEffect(() => {
     const canvas = mainCanvasRef.current;
     if (!canvas) return;
-    console.log("Llegué al mainCanvasRef");
     const showBoard = supportCanvasRef.current;
     if (!showBoard) return;
-    console.log("Llegué al supportCanvasRef");
     const context = canvas.getContext("2d");
     if (!context) return;
     setCtx(context);
@@ -278,9 +353,7 @@ export default function Home() {
     // Generar primera pieza
     const randomIndex = Math.floor(Math.random() * PIECES.length);
     const firstPiece = PIECES[randomIndex];
-    // const nextPiece = PIECES[randomIndex];
     setCurrentPiece(firstPiece);
-    // setNextPiece(nextPiece);
     setPiecePosition({ x: Math.floor(COLS / 2) - 1, y: 0 });
 
     // tiempo de caída
@@ -376,17 +449,21 @@ export default function Home() {
     drawBoard(ctx);
   }, [ctx, board, currentPiece, piecePosition]);
 
+  useEffect(() => {
+    if (!supCtx) return;
+    drawSupBoard(supCtx);
+  }, [supCtx, supportBoard, nextPiece, piecePosition]);
+
   return (
     <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
       <h1 className="text-2xl mb-4">Block Puzzle</h1>
       <p className="mt-0 text-lg text-gray-100">Puntuación: {score}</p>
       <div className="p-2">
-        {/* <NextPiece cols={COLS} rows={ROWS} blockSize={BLOCK_SIZE} /> */}
         <canvas
           className="bg-gray-800 border-2 border-gray-600 absolute left-66"
           ref={supportCanvasRef}
-          width={(COLS / 2) * BLOCK_SIZE}
-          height={(ROWS / 4) * BLOCK_SIZE}
+          width={SUPPORT_COLS * BLOCK_SIZE}
+          height={SUPPORT_ROWS * BLOCK_SIZE}
           id="support_canvas"
         ></canvas>
         <canvas
