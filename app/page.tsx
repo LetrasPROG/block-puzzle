@@ -63,6 +63,11 @@ const PIECES: PieceType[] = [
   }, //J
 ];
 
+const getRandomPiece = (): PieceType => {
+  const randomIndex = Math.floor(Math.random() * PIECES.length);
+  return PIECES[randomIndex];
+};
+
 const rotateMatrix = (matrix: number[][]): number[][] => {
   const rows = matrix.length;
   const cols = matrix[0].length;
@@ -102,7 +107,6 @@ export default function Home() {
   const pieceCheckRef = useRef(pieceCheck);
   const piecePositionRef = useRef(piecePosition);
   const boardRef = useRef<(string | null)[][]>(board);
-  // const supportBoardRef = useRef<(string | null)[][]>(supportBoard);
 
   useEffect(() => {
     currentPieceRef.current = currentPiece;
@@ -160,8 +164,7 @@ export default function Home() {
   // Verificamos si hay pieza siguiente
   const checkNextPiece = () => {
     if (pieceCheckRef.current === 0) {
-      const randomIndex = Math.floor(Math.random() * PIECES.length);
-      const newPiece = PIECES[randomIndex];
+      const newPiece = getRandomPiece();
       setPieceCheck(1);
       setNextPiece(newPiece);
     }
@@ -204,10 +207,9 @@ export default function Home() {
       setScore((prev) => prev + addScore);
     }
 
-    // Lanzamos Generamos nueva pieza
+    // Lanzamos/Generamos nueva pieza
     const spawnPos = { x: Math.floor(COLS / 2) - 1, y: 0 };
-    const randomIndex = Math.floor(Math.random() * PIECES.length);
-    const newPiece = PIECES[randomIndex];
+    const newPiece = getRandomPiece();
     const nextPiece = nextPieceRef.current ? nextPieceRef.current : newPiece;
 
     // Validamos si cabe la nueva pieza
