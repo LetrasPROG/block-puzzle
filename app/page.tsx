@@ -77,15 +77,15 @@ const rotateMatrix = (matrix: number[][]): number[][] => {
 };
 
 export default function Home() {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [score, setScore] = useState(0);
   const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
-
   const [board, setBoard] = useState<(string | null)[][]>(() =>
     Array.from({ length: ROWS }, () => Array(COLS).fill(null)),
   );
   const [currentPiece, setCurrentPiece] = useState<PieceType | null>(null);
   const [piecePosition, setPiecePosition] = useState({ x: 0, y: 0 });
 
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const currentPieceRef = useRef(currentPiece);
   const piecePositionRef = useRef(piecePosition);
   const boardRef = useRef<(string | null)[][]>(board);
@@ -160,9 +160,18 @@ export default function Home() {
       }
     }
 
+    // TODO: Revisar puntuación
     // Elimina las filas completas
-    const clearedBoard = clearFullRows(newBoard);
+    const { board: clearedBoard, rowsCleared } = clearFullRows(newBoard);
     setBoard(clearedBoard);
+
+    // Conteo de puntos
+    if (rowsCleared) {
+      // 100 pts por c/línea o mas si son más de 1 línea
+      const points = [0, 100, 300, 500, 800];
+      const addScore = points[rowsCleared] || 0;
+      setScore((prev) => prev + addScore);
+    }
 
     // Generamos nueva pieza
     const randomIndex = Math.floor(Math.random() * PIECES.length);
@@ -182,18 +191,18 @@ export default function Home() {
 
   const clearFullRows = (
     currentBoard: (string | null)[][],
-  ): (string | null)[][] => {
-    const newBoard = currentBoard.filter((row) =>
+  ): { board: (string | null)[][]; rowsCleared: number } => {
+    const nonFullRows = currentBoard.filter((row) =>
       row.some((cell) => cell === null),
     );
+    const rowsCleared = ROWS - nonFullRows.length;
 
-    const removedRows = ROWS - newBoard.length;
-
-    const emptyRows = Array.from({ length: removedRows }, () =>
+    const emptyRows = Array.from({ length: rowsCleared }, () =>
       Array(COLS).fill(null),
     );
+    const newBoard = [...emptyRows, ...nonFullRows];
 
-    return [...emptyRows, ...newBoard];
+    return { board: newBoard, rowsCleared };
   };
 
   // Funciones de dibujado
@@ -361,6 +370,7 @@ export default function Home() {
   return (
     <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
       <h1 className="text-2xl mb-4">Block Puzzle</h1>
+      <p className="mt-0 text-lg text-gray-100">Puntuación: {score}</p>
       <div className="p-2">
         <canvas
           ref={canvasRef}
