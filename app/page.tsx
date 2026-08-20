@@ -1,5 +1,6 @@
 "use client";
 
+import NextPiece from "@/components/next-piece";
 import { useState, useEffect, useRef } from "react";
 
 // Parámetros fijos del tablero
@@ -85,7 +86,10 @@ export default function Home() {
   const [currentPiece, setCurrentPiece] = useState<PieceType | null>(null);
   const [piecePosition, setPiecePosition] = useState({ x: 0, y: 0 });
 
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [nextPiece, setNextPiece] = useState<PieceType | null>(null);
+
+  const mainCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const supportCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const currentPieceRef = useRef(currentPiece);
   const piecePositionRef = useRef(piecePosition);
   const boardRef = useRef<(string | null)[][]>(board);
@@ -160,7 +164,6 @@ export default function Home() {
       }
     }
 
-    // TODO: Revisar puntuación
     // Elimina las filas completas
     const { board: clearedBoard, rowsCleared } = clearFullRows(newBoard);
     setBoard(clearedBoard);
@@ -262,8 +265,12 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const canvas = canvasRef.current;
+    const canvas = mainCanvasRef.current;
     if (!canvas) return;
+    console.log("Llegué al mainCanvasRef");
+    const showBoard = supportCanvasRef.current;
+    if (!showBoard) return;
+    console.log("Llegué al supportCanvasRef");
     const context = canvas.getContext("2d");
     if (!context) return;
     setCtx(context);
@@ -271,7 +278,9 @@ export default function Home() {
     // Generar primera pieza
     const randomIndex = Math.floor(Math.random() * PIECES.length);
     const firstPiece = PIECES[randomIndex];
+    // const nextPiece = PIECES[randomIndex];
     setCurrentPiece(firstPiece);
+    // setNextPiece(nextPiece);
     setPiecePosition({ x: Math.floor(COLS / 2) - 1, y: 0 });
 
     // tiempo de caída
@@ -372,10 +381,18 @@ export default function Home() {
       <h1 className="text-2xl mb-4">Block Puzzle</h1>
       <p className="mt-0 text-lg text-gray-100">Puntuación: {score}</p>
       <div className="p-2">
+        {/* <NextPiece cols={COLS} rows={ROWS} blockSize={BLOCK_SIZE} /> */}
         <canvas
-          ref={canvasRef}
+          className="bg-gray-800 border-2 border-gray-600 absolute left-66"
+          ref={supportCanvasRef}
+          width={(COLS / 2) * BLOCK_SIZE}
+          height={(ROWS / 4) * BLOCK_SIZE}
+          id="support_canvas"
+        ></canvas>
+        <canvas
+          ref={mainCanvasRef}
           className="bg-gray-800 border-2 border-gray-600"
-          id="canvas"
+          id="main_canvas"
           width={COLS * BLOCK_SIZE}
           height={ROWS * BLOCK_SIZE}
         ></canvas>
