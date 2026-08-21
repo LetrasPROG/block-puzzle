@@ -2,6 +2,65 @@
 
 import { useState, useEffect, useRef } from "react";
 
+// Parámetros fijos del tablero
+const COLS = 10;
+const ROWS = 20;
+const BLOCK_SIZE = 25;
+
+// Tipado de piezas
+type PieceType = {
+  //(1 = relleno, 0 = vacío)
+  shape: number[][];
+  color: string;
+};
+
+// Posibles piezas
+const PIECES: PieceType[] = [
+  { shape: [[1, 1, 1, 1]], color: "#00f0f0" }, //I
+  {
+    shape: [
+      [1, 1],
+      [1, 1],
+    ],
+    color: "#f0f000",
+  }, //O
+  {
+    shape: [
+      [0, 1, 0],
+      [1, 1, 1],
+    ],
+    color: "#a000f0",
+  }, //T
+  {
+    shape: [
+      [1, 1, 0],
+      [0, 1, 1],
+    ],
+    color: "#00f000",
+  }, //S
+  {
+    shape: [
+      [0, 1, 1],
+      [1, 1, 0],
+    ],
+    color: "#f00000",
+  }, //Z
+  {
+    shape: [
+      [1, 0, 0],
+      [1, 1, 1],
+    ],
+    color: "#f0a000",
+  }, //L
+  {
+    shape: [
+      [0, 0, 1],
+      [1, 1, 1],
+    ],
+    color: "#0000f0",
+  }, //J
+];
+
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
@@ -61,7 +120,7 @@ export default function Home() {
             (piece.x + x) * blockSize,
             (piece.y + y) * blockSize,
             blockSize - 1,
-            blockSize - 1
+            blockSize - 1,
           );
         }
       });
