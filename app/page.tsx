@@ -374,8 +374,7 @@ export default function Home() {
     setCtx(context);
 
     // Generar primera pieza
-    const randomIndex = Math.floor(Math.random() * PIECES.length);
-    const firstPiece = PIECES[randomIndex];
+    const firstPiece = getRandomPiece();
     setCurrentPiece(firstPiece);
     setPiecePosition({ x: Math.floor(COLS / 2) - 1, y: 0 });
 
@@ -476,34 +475,91 @@ export default function Home() {
   useEffect(() => {
     if (!supCtx) return;
     drawSupBoard(supCtx);
-  }, [supCtx, supportBoard, nextPiece, piecePosition]);
+  }, [supCtx, supportBoard, nextPiece]);
 
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <h1 className="text-2xl mb-4">Block Puzzle</h1>
-      <p className="mt-0 text-lg text-gray-100">Puntuación: {score}</p>
-      <div className="p-2">
-        <div className="absolute left-66 top-31">
-          <p className="mb-2 text-lg text-gray-100">Siguiente pieza</p>
-          <canvas
-            className="bg-gray-800 border-2 border-gray-600"
-            ref={supportCanvasRef}
-            width={SUPPORT_COLS * BLOCK_SIZE}
-            height={SUPPORT_ROWS * BLOCK_SIZE}
-            id="support_canvas"
-          ></canvas>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex flex-col items-center justify-center p-4 font-sans">
+      <div className="w-full max-w-4xl bg-gray-800/80 backdrop-blur-sm rounded-3xl shadow-2xl p-6 md:p-8 border border-gray-700">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+          <h1 className="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent tracking-tight drop-shadow-lg">
+            🧩 Block Puzzle
+          </h1>
+          <div className="flex items-center gap-4">
+            <div className="bg-gray-700/50 px-4 py-2 rounded-xl border border-gray-600">
+              <span className="text-xs uppercase tracking-wider text-gray-400">
+                Puntuación:
+              </span>
+              <p className="text-2xl font-bold text-cyan-300 text-center">
+                {score}
+              </p>
+            </div>
+            <div className="bg-gray-700/50 px-4 py-2 rounded-xl border border-gray-600 hidden sm:block">
+              <span className="text-xs uppercase tracking-wider text-gray-400">
+                Líneas
+              </span>
+              <p className="text-2xl font-bold text-green-400 text-center">
+                {Math.floor(score / 100)}
+              </p>
+            </div>
+          </div>
         </div>
-        <canvas
-          ref={mainCanvasRef}
-          className="bg-gray-800 border-2 border-gray-600"
-          id="main_canvas"
-          width={COLS * BLOCK_SIZE}
-          height={ROWS * BLOCK_SIZE}
-        ></canvas>
+        <div className="flex flex-col md:flex-row items-center justify-center gap-8">
+          <div className="relative">
+            <div className="p-1 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-2xl shadow-2xl">
+              <canvas
+                ref={mainCanvasRef}
+                className="bg-gray-900 rounded-xl border-2 border-gray-600 shadow-inner"
+                id="main_canvas"
+                width={COLS * BLOCK_SIZE}
+                height={ROWS * BLOCK_SIZE}
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center gap-6 min-w-[140px]">
+            <div className="bg-gray-700/50 p-4 rounded-2xl border border-gray-600 w-full">
+              <p className="text-xs uppercase tracking-wider text-gray-400 text-center mb-2">
+                Siguiente
+              </p>
+              <div className="flex justify-center">
+                <canvas
+                  className="bg-gray-900 rounded-xl border border-gray-600"
+                  ref={supportCanvasRef}
+                  width={SUPPORT_COLS * BLOCK_SIZE}
+                  height={SUPPORT_ROWS * BLOCK_SIZE}
+                  id="support_canvas"
+                />
+              </div>
+            </div>
+            <div className="text-center text-gray-400 text-sm bg-gray-700/30 px-4 py-2 rounded-xl border border-gray-700 w-full">
+              <div className="flex justify-center gap-5 text-xs">
+                <div>
+                  <span>← →</span>
+                  <p className="mt-1">Mover</p>
+                </div>
+                <div>
+                  <span>↓</span>
+                  <p className="mt-1">Caer</p>
+                </div>
+                <div>
+                  <span>↑</span>
+                  <p className="mt-1">Rotar</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-2 bg-red-600/80 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition-colors duration-200 shadow-md border border-red-500/50"
+          >
+            🔄 Reiniciar
+          </button>
+        </div>
       </div>
-      <p className="mt-4 text-sm text-gray-500">
-        Usa las flechas de ← → ↓ para mover, y ↑ para rotar
-      </p>
     </div>
   );
 }
