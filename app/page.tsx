@@ -475,7 +475,7 @@ export default function Home() {
   useEffect(() => {
     if (!supCtx) return;
     drawSupBoard(supCtx);
-  }, [supCtx, supportBoard, nextPiece]);
+  }, [supCtx, nextPiece]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex flex-col items-center justify-center p-4 font-sans">
