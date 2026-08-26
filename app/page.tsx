@@ -13,6 +13,7 @@ import { useState } from "react";
 export default function Home() {
   const [score, setScore] = useState(0);
   const [nextPiece, setNextPiece] = useState<PieceType | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex flex-col items-center justify-center p-4 font-sans">
@@ -40,7 +41,7 @@ export default function Home() {
           <GameBoard
             onScoreChange={setScore}
             onNextPieceChange={setNextPiece}
-            // onGameOver={() => alert("¡Game Over!")}
+            onGameOver={() => setShowModal(true)}
           />
           <div className="flex flex-col items-center gap-6 min-w-[140px]">
             <div className="bg-gray-700/50 p-4 rounded-2xl border border-gray-600 w-full">
@@ -64,6 +65,21 @@ export default function Home() {
             🔄 Reiniciar
           </button>
         </div>
+
+        {/* Modal GameOver */}
+        {showModal && (
+          <div className="absolute mx-auto my-auto w-[300px] h-[250px] z-10">
+            <h1>
+              ¡Se acabó el Juego! 💀 Recarga la página para volver a empezar
+            </h1>
+            <p>
+              Tu puntuación final fue: <span>{score}</span>
+            </p>
+            <p>
+              Total de líneas eliminadas: <span>{Math.floor(score / 100)}</span>
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
