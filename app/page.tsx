@@ -65,22 +65,51 @@ export default function Home() {
             🔄 Reiniciar
           </button>
         </div>
-
+      </div>
+      <>
         {/* Modal GameOver */}
         {showModal && (
-          <div className="absolute mx-auto my-auto w-[300px] h-[250px] z-10">
-            <h1>
-              ¡Se acabó el Juego! 💀 Recarga la página para volver a empezar
-            </h1>
-            <p>
-              Tu puntuación final fue: <span>{score}</span>
-            </p>
-            <p>
-              Total de líneas eliminadas: <span>{Math.floor(score / 100)}</span>
-            </p>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fadeIn">
+            <div className="relative w-[90%] max-w-md bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl shadow-2xl border border-gray-700 p-8 text-center transform transition-all animate-scaleIn">
+              {/* Icono decorativo */}
+              <div className="text-6xl mb-4">💀</div>
+              <h2 className="text-3xl font-bold text-white mb-2">
+                ¡Game Over!
+              </h2>
+              <p className="text-gray-300 mb-6">
+                Has perdido, pero siempre puedes intentarlo de nuevo.
+              </p>
+
+              {/* Estadísticas */}
+              <div className="bg-gray-700/50 rounded-2xl p-4 mb-6 border border-gray-600">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-400">Puntuación</span>
+                  <span className="text-2xl font-bold text-cyan-300">
+                    {score}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Líneas eliminadas</span>
+                  <span className="text-2xl font-bold text-green-400">
+                    {Math.floor(score / 100)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Botón reiniciar */}
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  window.location.reload();
+                }}
+                className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold rounded-xl transition-all duration-200 shadow-md border border-cyan-400/30 cursor-pointer"
+              >
+                🔄 Jugar de nuevo
+              </button>
+            </div>
           </div>
         )}
-      </div>
+      </>
     </div>
   );
 }

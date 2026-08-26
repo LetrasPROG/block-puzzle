@@ -111,7 +111,6 @@ export default function GameBoard({
       setCurrentPiece(null);
       setNextPiece(null);
       onGameOver?.();
-      alert("¡Se acabó el Juego! 💀 Recarga la página para volver a empezar");
     } else {
       setCurrentPiece(newPiece);
       setPiecePosition(spawnPos);
