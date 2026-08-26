@@ -60,7 +60,7 @@ export default function Home() {
         <div>
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-2 bg-red-600/80 hover:bg-red-700 cursor-pointer text-white rounded-xl text-sm font-medium transition-colors duration-200 shadow-md border border-red-500/50"
+            className="px-6 py-2 bg-red-600/80 hover:bg-red-900 cursor-pointer text-white rounded-xl text-sm font-medium transition-colors duration-200 shadow-md border border-red-500/50"
           >
             🔄 Reiniciar
           </button>
