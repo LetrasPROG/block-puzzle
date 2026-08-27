@@ -21,6 +21,8 @@ export default function Home() {
   const [finalScore, setFinalScore] = useState(0);
   const [finalLines, setFinalLines] = useState(0);
   const [playerName, setPlayerName] = useState("");
+  const [saveMessage, setSaveMessage] = useState("");
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [message, setMessage] = useState("");
 
   // Guardar puntuación en Supabase
@@ -31,41 +33,35 @@ export default function Home() {
       .insert([{ player_name: name, score, lines_cleared: lines }]);
     if (error) {
       console.error("Error guardando puntuación:", error);
-      alert("Hubo un error al guardar la puntuación. Intenta de nuevo.");
-    } else {
-      console.log("Puntuación guardada con éxito");
+      throw new Error("Error al guardar la puntuación");
     }
+    console.log("Puntuación guardada con éxito");
   };
 
   const handleGameOver = async (score: number, lines: number) => {
+    setPlayerName("");
+    setSaveMessage("");
+    setSaveSuccess(false);
     setFinalScore(score);
     setFinalLines(lines);
     setCurrentScore(score);
     setCurrentLines(lines);
     setShowModal(true);
+  };
+
+  const handleSaveScore = async () => {
+    const name = playerName.trim() || "Anónimo";
     setIsSaving(true);
+    setSaveMessage("Guardando...");
+
     try {
-      const supabase = createClient();
-      let name = playerName;
-      if (!name) {
-        name = prompt("¡Game Over! Introduce tu nombre:") || "Anónimo";
-        setPlayerName(name);
-      }
-
-      const { error } = await supabase
-        .from("scores")
-        .insert([{ player_name: playerName, score, lines_cleared: lines }]);
-
-      if (error) {
-        console.error("Error guardando puntuación:", error);
-        setMessage("Hubo un error al guardar tu puntuación.");
-      } else {
-        setMessage("¡Tu puntuación ha sido guardada correctamente! 🎉");
-        console.log("Puntuación guardada correctamente.");
-      }
-    } catch (err) {
-      setMessage("Error inesperado al guardar la puntuación.");
-      console.error("Error inesperado:", err);
+      await saveScore(name, finalScore, finalLines);
+      setSaveSuccess(true);
+      setSaveMessage("¡Puntuación guardada correctamente! 🎉");
+    } catch (error) {
+      console.error(error);
+      setSaveSuccess(false);
+      setSaveMessage("Hubo un error al guardar. Intenta de nuevo.");
     } finally {
       setIsSaving(false);
     }
@@ -167,32 +163,58 @@ export default function Home() {
                 </div>
               </div>
 
-              {isSaving ? (
-                <div className="text-cyan-400 mb-4">
-                  Guardando puntuación...
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500 mb-4">
-                  Tu puntuación ha sido guardada con éxito.
-                </p>
-              )}
+              <div className="mb-4">
+                <label
+                  htmlFor="playerName"
+                  className="block text-sm text-gray-400 mb-1"
+                >
+                  Tu nombre (opcional)
+                </label>
+                <input
+                  type="text"
+                  id="playerName"
+                  value={playerName}
+                  onChange={(e) => setPlayerName(e.target.value)}
+                  placeholder="Ej: Carlos"
+                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  disabled={isSaving || saveSuccess}
+                />
+              </div>
 
-              {playerName && (
-                <p className="mb-4 text-center text-sm text-gray-400">
-                  Guardado como:{" "}
-                  <span className="text-white">{playerName}</span>
+              {saveMessage && (
+                <p
+                  className={`text-sm mb-3 ${saveSuccess ? "text-green-400" : "text-red-400"}`}
+                >
+                  {saveMessage}
                 </p>
               )}
 
               {/* Botón reiniciar */}
-              <button
-                onClick={() => {
-                  handleRestart();
-                }}
-                className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold rounded-xl transition-all duration-200 shadow-md border border-cyan-400/30 cursor-pointer"
-              >
-                🔄 Jugar de nuevo
-              </button>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={handleSaveScore}
+                  disabled={isSaving || saveSuccess}
+                  className={`w-full py-3 font-bold rounded-xl transition-all duration-200 shadow-md border cursor-pointer
+                  ${
+                    isSaving || saveSuccess
+                      ? "bg-gray-600 text-gray-300 border-gray-500 cursor-not-allowed"
+                      : "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white border-green-400/30"
+                  }`}
+                >
+                  {isSaving
+                    ? "Guardando..."
+                    : saveSuccess
+                      ? "✅ Guardado"
+                      : "💾 Guardar Puntuación"}
+                </button>
+
+                <button
+                  onClick={handleRestart}
+                  className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold rounded-xl transition-all duration-200 shadow-md border border-cyan-400/30 cursor-pointer"
+                >
+                  🔄 Jugar de nuevo
+                </button>
+              </div>
             </div>
           </div>
         )}
