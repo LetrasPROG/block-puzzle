@@ -8,12 +8,11 @@ import { PieceType } from "@/lib/tetris";
 import { useState } from "react";
 
 // TODO: Implementar que se pueda jugar con el tlf
-// TODO: Componetizar todo y reducir las líneas de código del page.tsx
 
 export default function Home() {
   const [score, setScore] = useState(0);
   const [nextPiece, setNextPiece] = useState<PieceType | null>(null);
-  const [showModal, setShowModal] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex flex-col items-center justify-center p-4 font-sans">
@@ -41,7 +40,7 @@ export default function Home() {
           <GameBoard
             onScoreChange={setScore}
             onNextPieceChange={setNextPiece}
-            onGameOver={() => setShowModal(true)}
+            onGameOver={() => setGameOver(true)}
           />
           <div className="flex flex-col items-center gap-6 min-w-[140px]">
             <div className="bg-gray-700/50 p-4 rounded-2xl border border-gray-600 w-full">
@@ -68,7 +67,7 @@ export default function Home() {
       </div>
       <>
         {/* Modal GameOver */}
-        {showModal && (
+        {gameOver && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fadeIn">
             <div className="relative w-[90%] max-w-md bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl shadow-2xl border border-gray-700 p-8 text-center transform transition-all animate-scaleIn">
               {/* Icono decorativo */}
@@ -99,7 +98,7 @@ export default function Home() {
               {/* Botón reiniciar */}
               <button
                 onClick={() => {
-                  setShowModal(false);
+                  setGameOver(false);
                   window.location.reload();
                 }}
                 className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold rounded-xl transition-all duration-200 shadow-md border border-cyan-400/30 cursor-pointer"

@@ -62,6 +62,18 @@ export default function GameBoard({
     onScoreChange?.(score);
   }, [score, onScoreChange]);
 
+  // Función Reset
+  const resetGame = () => {
+    setBoard(Array.from({ length: ROWS }, () => Array(COLS).fill(null)));
+    setScore(0);
+    const firstPiece = getRandomPiece();
+    const next = getRandomPiece();
+    setCurrentPiece(firstPiece);
+    setNextPiece(next);
+    setPiecePosition({ x: Math.floor(COLS / 2) - 1, y: 0 });
+    // setGameOver(false);
+  };
+
   //   Función para fijar pieza
   const lockPiece = () => {
     const piece = currentPieceRef.current;
