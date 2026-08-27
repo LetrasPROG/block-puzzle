@@ -15,12 +15,14 @@ import Canvas from "./canvas";
 
 interface GameBoardProps {
   onScoreChange?: (score: number) => void;
+  onLineChange?: (lines: number) => void;
   onNextPieceChange?: (piece: PieceType | null) => void;
-  onGameOver?: () => void;
+  onGameOver: (score: number, lines: number) => void;
 }
 
 export default function GameBoard({
   onScoreChange,
+  onLineChange,
   onNextPieceChange,
   onGameOver,
 }: GameBoardProps) {
@@ -34,12 +36,15 @@ export default function GameBoard({
   const [piecePosition, setPiecePosition] = useState({ x: 0, y: 0 });
   const [nextPiece, setNextPiece] = useState<PieceType | null>(null);
   const [score, setScore] = useState(0);
+  const [lines, setLines] = useState(0);
 
   //   Ref para sincronización con setInterval
   const boardRef = useRef(board);
   const piecePositionRef = useRef(piecePosition);
   const nextPieceRef = useRef(nextPiece);
   const currentPieceRef = useRef(currentPiece);
+  const scoreRef = useRef(score);
+  const linesRef = useRef(lines);
 
   useEffect(() => {
     currentPieceRef.current = currentPiece;
@@ -59,8 +64,20 @@ export default function GameBoard({
   }, [piecePosition]);
 
   useEffect(() => {
-    onScoreChange?.(score);
+    linesRef.current = lines;
+  }, [lines]);
+
+  useEffect(() => {
+    scoreRef.current = score;
+  }, [score]);
+
+  useEffect(() => {
+    onScoreChange?.(scoreRef.current);
   }, [score, onScoreChange]);
+
+  useEffect(() => {
+    onLineChange?.(linesRef.current);
+  }, [lines, onLineChange]);
 
   // Función Reset
   const resetGame = () => {
@@ -71,7 +88,6 @@ export default function GameBoard({
     setCurrentPiece(firstPiece);
     setNextPiece(next);
     setPiecePosition({ x: Math.floor(COLS / 2) - 1, y: 0 });
-    // setGameOver(false);
   };
 
   //   Función para fijar pieza
@@ -109,6 +125,7 @@ export default function GameBoard({
       const points = [0, 100, 300, 500, 800];
       const addPoints = points[rowsCleared] || 0;
       setScore((prev) => prev + addPoints);
+      setLines((prev) => prev + rowsCleared);
     }
 
     // Lanzamos/Generamos nueva pieza
@@ -119,10 +136,10 @@ export default function GameBoard({
 
     // Validamos si cabe la nueva pieza
     if (!isValidPosition(newPiece, spawnPos, clearedBoard)) {
+      onGameOver(scoreRef.current, linesRef.current);
       setBoard(Array.from({ length: ROWS }, () => Array(COLS).fill(null)));
       setCurrentPiece(null);
       setNextPiece(null);
-      onGameOver?.();
     } else {
       setCurrentPiece(newPiece);
       setPiecePosition(spawnPos);
