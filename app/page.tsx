@@ -23,7 +23,6 @@ export default function Home() {
   const [playerName, setPlayerName] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [message, setMessage] = useState("");
 
   // Guardar puntuación en Supabase
   const saveScore = async (name: string, score: number, lines: number) => {
@@ -115,19 +114,17 @@ export default function Home() {
         </div>
 
         {/* Botón de reinicio */}
-        <div>
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-6">
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-2 bg-red-600/80 hover:bg-red-900 cursor-pointer text-white rounded-xl text-sm font-medium transition-colors duration-200 shadow-md border border-red-500/50"
+            className="w-full sm:w-auto px-6 py-2.5 bg-red-600/80 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition-all duration-200 shadow-md border border-red-500/50 hover:shadow-red-500/20 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
           >
             🔄 Reiniciar
           </button>
-        </div>
 
-        <div>
           <Link
             href="/leaderboard"
-            className="text-cyan-400 hover:text-cyan-300 transition-colors"
+            className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-xl text-sm font-medium transition-all duration-200 shadow-md border border-cyan-400/30 hover:shadow-cyan-500/20 hover:scale-[1.02] active:scale-[0.98] text-center"
           >
             Ver Ranking 🏆
           </Link>
