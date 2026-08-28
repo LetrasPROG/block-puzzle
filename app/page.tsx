@@ -117,14 +117,14 @@ export default function Home() {
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-6">
           <button
             onClick={() => window.location.reload()}
-            className="w-full sm:w-auto px-6 py-2.5 bg-red-600/80 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition-all duration-200 shadow-md border border-red-500/50 hover:shadow-red-500/20 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+            className="px-6 py-2.5 bg-gradient-to-r from-red-600/80 to-red-700/80 hover:from-red-700 hover:to-red-800 text-white rounded-xl text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-red-500/20 border border-red-500/50 cursor-pointer flex items-center gap-2"
           >
             🔄 Reiniciar
           </button>
 
           <Link
             href="/leaderboard"
-            className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-xl text-sm font-medium transition-all duration-200 shadow-md border border-cyan-400/30 hover:shadow-cyan-500/20 hover:scale-[1.02] active:scale-[0.98] text-center"
+            className="px-6 py-2.5 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 text-cyan-300 hover:text-cyan-200 rounded-xl text-sm font-medium transition-all duration-200 border border-cyan-500/30 hover:border-cyan-500/50 shadow-lg hover:shadow-cyan-500/10 flex items-center gap-2"
           >
             Ver Ranking 🏆
           </Link>
