@@ -1,16 +1,18 @@
 "use client";
 
 import ControlsInfo from "@/components/ControlsInfo";
-import GameBoard from "@/components/GameBoard";
+import GameBoard, { GameBoardHandle } from "@/components/GameBoard";
 import NextPiecePreview from "@/components/NextPiecePreview";
 import ScoreDisplay from "@/components/ScoreDisplay";
 import { PieceType } from "@/lib/tetris";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 // TODO: Implementar que se pueda jugar con el tlf
+// TODO: Botón de iniciar y parar juego
+// TODO: Aumento de velocidad de acuerdo a los puntos
 
 export default function Home() {
   const [nextPiece, setNextPiece] = useState<PieceType | null>(null);
@@ -23,6 +25,16 @@ export default function Home() {
   const [playerName, setPlayerName] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [gameKey, setGameKey] = useState(0);
+  const [start, setStart] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const gameBoardRef = useRef<GameBoardHandle>(null);
+
+  const handleStart = () => {
+    gameBoardRef.current?.start();
+    setIsPlaying(true);
+  };
 
   // Guardar puntuación en Supabase
   const saveScore = async (name: string, score: number, lines: number) => {
@@ -38,6 +50,7 @@ export default function Home() {
   };
 
   const handleGameOver = async (score: number, lines: number) => {
+    setIsPlaying(false);
     setPlayerName("");
     setSaveMessage("");
     setSaveSuccess(false);
@@ -66,9 +79,18 @@ export default function Home() {
     }
   };
 
-  const handleRestart = () => {
+  // Función Reset
+  const handleReset = () => {
+    setGameKey((prev) => prev + 1);
+    setIsPlaying(false);
     setShowModal(false);
-    window.location.reload();
+    setCurrentScore(0);
+    setCurrentLines(0);
+    setFinalScore(0);
+    setFinalLines(0);
+    setPlayerName("");
+    setSaveMessage("");
+    setSaveSuccess(false);
   };
 
   return (
@@ -95,12 +117,26 @@ export default function Home() {
         {/* Area de juego */}
         <div className="flex flex-col md:flex-row items-center justify-center gap-8">
           <GameBoard
+            key={gameKey}
+            ref={gameBoardRef}
+            isPlaying={isPlaying}
             onScoreChange={setCurrentScore}
             onLineChange={setCurrentLines}
             onNextPieceChange={setNextPiece}
             onGameOver={handleGameOver}
           />
           <div className="flex flex-col items-center gap-6 min-w-[140px]">
+            {!isPlaying && (
+              <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-2">
+                <button
+                  onClick={handleStart}
+                  disabled={isPlaying}
+                  className="px-6 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-green-500/20 border border-green-500/50 cursor-pointer flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span>▶️</span> Iniciar
+                </button>
+              </div>
+            )}
             <div className="bg-gray-700/50 p-4 rounded-2xl border border-gray-600 w-full">
               <p className="text-xs uppercase tracking-wider text-gray-400 text-center mb-2">
                 Siguiente
@@ -116,7 +152,7 @@ export default function Home() {
         {/* Botón de reinicio */}
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-6">
           <button
-            onClick={() => window.location.reload()}
+            onClick={handleReset}
             className="px-6 py-2.5 bg-gradient-to-r from-red-600/80 to-red-700/80 hover:from-red-700 hover:to-red-800 text-white rounded-xl text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-red-500/20 border border-red-500/50 cursor-pointer flex items-center gap-2"
           >
             🔄 Reiniciar
@@ -206,7 +242,7 @@ export default function Home() {
                 </button>
 
                 <button
-                  onClick={handleRestart}
+                  onClick={handleReset}
                   className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold rounded-xl transition-all duration-200 shadow-md border border-cyan-400/30 cursor-pointer"
                 >
                   🔄 Jugar de nuevo
