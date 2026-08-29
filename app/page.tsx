@@ -11,8 +11,6 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 // TODO: Implementar que se pueda jugar con el tlf
-// TODO: Botón de iniciar y parar juego
-// TODO: Aumento de velocidad de acuerdo a los puntos
 
 export default function Home() {
   const [nextPiece, setNextPiece] = useState<PieceType | null>(null);
