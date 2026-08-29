@@ -26,7 +26,6 @@ export default function Home() {
   const [saveMessage, setSaveMessage] = useState("");
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [gameKey, setGameKey] = useState(0);
-  const [start, setStart] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
 
   const gameBoardRef = useRef<GameBoardHandle>(null);

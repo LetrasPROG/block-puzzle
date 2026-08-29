@@ -276,13 +276,6 @@ const GameBoard = forwardRef<GameBoardHandle, GameBoardProps>(
       if (!context) return;
       setCtx(context);
 
-      // Generar primera pieza
-      // const firstPiece = getRandomPiece();
-      // const next = getRandomPiece();
-      // setCurrentPiece(firstPiece);
-      // setNextPiece(next);
-      // setPiecePosition({ x: Math.floor(COLS / 2) - 1, y: 0 });
-
       // Controles del teclado
       const handleKeyDown = (e: KeyboardEvent) => {
         if (!isPlaying) return;
