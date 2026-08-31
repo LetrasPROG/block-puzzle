@@ -25,6 +25,7 @@ export interface GameBoardHandle {
 
 interface GameBoardProps {
   isPlaying?: boolean;
+  isPaused?: boolean;
   onScoreChange?: (score: number) => void;
   onLineChange?: (lines: number) => void;
   onNextPieceChange?: (piece: PieceType | null) => void;
@@ -44,6 +45,7 @@ const GameBoard = forwardRef<GameBoardHandle, GameBoardProps>(
   (
     {
       isPlaying = false,
+      isPaused = false,
       onScoreChange,
       onLineChange,
       onNextPieceChange,
@@ -143,18 +145,18 @@ const GameBoard = forwardRef<GameBoardHandle, GameBoardProps>(
 
     // Iniciar el bucle al montar el componente (manejador de velocidad)
     useEffect(() => {
-      if (isPlaying) {
+      if (isPlaying && !isPaused) {
         gameLoop();
       } else {
         if (timeoutRef.current) {
-          clearInterval(timeoutRef.current);
+          clearTimeout(timeoutRef.current);
           timeoutRef.current = null;
         }
       }
       return () => {
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
       };
-    }, [isPlaying]);
+    }, [isPlaying, isPaused]);
 
     //   Función para fijar pieza
     const lockPiece = () => {
@@ -268,6 +270,72 @@ const GameBoard = forwardRef<GameBoardHandle, GameBoardProps>(
       }
     };
 
+    // Controles del teclado
+    const handleControls = (e: KeyboardEvent) => {
+      if (!isPlaying) return;
+      if (isPaused) return;
+      const piece = currentPieceRef.current;
+      const pos = piecePositionRef.current;
+      const currentBoard = boardRef.current;
+
+      if (!piece) return;
+
+      switch (e.key) {
+        case "ArrowLeft": {
+          const newPos = { x: pos.x - 1, y: pos.y };
+          if (isValidPosition(piece, newPos, currentBoard)) {
+            setPiecePosition(newPos);
+          }
+          e.preventDefault();
+          break;
+        }
+        case "ArrowRight": {
+          const newPos = { x: pos.x + 1, y: pos.y };
+          if (isValidPosition(piece, newPos, currentBoard)) {
+            setPiecePosition(newPos);
+          }
+          e.preventDefault();
+          break;
+        }
+        case "ArrowDown": {
+          const newPos = { x: pos.x, y: pos.y + 1 };
+          if (isValidPosition(piece, newPos, currentBoard)) {
+            setPiecePosition(newPos);
+          }
+          e.preventDefault();
+          break;
+        }
+        case "ArrowUp": {
+          const piece = currentPieceRef.current;
+          const pos = piecePositionRef.current;
+          if (!piece) return;
+
+          const rotatedShape = rotateMatrix(piece.shape);
+          const rotatedPiece: PieceType = {
+            shape: rotatedShape,
+            color: piece.color,
+          };
+
+          // Efecto Wall-Kick
+          const attempts = [
+            pos,
+            { x: pos.x - 1, y: pos.y }, //Izq
+            { x: pos.x + 1, y: pos.y }, //Der
+          ];
+
+          for (const attempt of attempts) {
+            if (isValidPosition(rotatedPiece, attempt, boardRef.current)) {
+              setCurrentPiece(rotatedPiece);
+              setPiecePosition(attempt);
+              break;
+            }
+          }
+          e.preventDefault();
+          break;
+        }
+      }
+    };
+
     // Dibujamos el tablero de juego principal
     useEffect(() => {
       const canvas = canvasRef.current;
@@ -276,77 +344,12 @@ const GameBoard = forwardRef<GameBoardHandle, GameBoardProps>(
       if (!context) return;
       setCtx(context);
 
-      // Controles del teclado
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (!isPlaying) return;
-        const piece = currentPieceRef.current;
-        const pos = piecePositionRef.current;
-        const currentBoard = boardRef.current;
-
-        if (!piece) return;
-
-        switch (e.key) {
-          case "ArrowLeft": {
-            const newPos = { x: pos.x - 1, y: pos.y };
-            if (isValidPosition(piece, newPos, currentBoard)) {
-              setPiecePosition(newPos);
-            }
-            e.preventDefault();
-            break;
-          }
-          case "ArrowRight": {
-            const newPos = { x: pos.x + 1, y: pos.y };
-            if (isValidPosition(piece, newPos, currentBoard)) {
-              setPiecePosition(newPos);
-            }
-            e.preventDefault();
-            break;
-          }
-          case "ArrowDown": {
-            const newPos = { x: pos.x, y: pos.y + 1 };
-            if (isValidPosition(piece, newPos, currentBoard)) {
-              setPiecePosition(newPos);
-            }
-            e.preventDefault();
-            break;
-          }
-          case "ArrowUp": {
-            const piece = currentPieceRef.current;
-            const pos = piecePositionRef.current;
-            if (!piece) return;
-
-            const rotatedShape = rotateMatrix(piece.shape);
-            const rotatedPiece: PieceType = {
-              shape: rotatedShape,
-              color: piece.color,
-            };
-
-            // Efecto Wall-Kick
-            const attempts = [
-              pos,
-              { x: pos.x - 1, y: pos.y }, //Izq
-              { x: pos.x + 1, y: pos.y }, //Der
-            ];
-
-            for (const attempt of attempts) {
-              if (isValidPosition(rotatedPiece, attempt, boardRef.current)) {
-                setCurrentPiece(rotatedPiece);
-                setPiecePosition(attempt);
-                break;
-              }
-            }
-            e.preventDefault();
-            break;
-          }
-        }
-      };
-
-      window.addEventListener("keydown", handleKeyDown);
+      window.addEventListener("keydown", handleControls);
 
       return () => {
-        window.removeEventListener("keydown", handleKeyDown);
+        window.removeEventListener("keydown", handleControls);
       };
-    }, []);
+    }, [isPlaying, isPaused]);
 
     useEffect(() => {
       if (!ctx) return;

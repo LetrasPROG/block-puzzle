@@ -25,12 +25,22 @@ export default function Home() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [gameKey, setGameKey] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
 
   const gameBoardRef = useRef<GameBoardHandle>(null);
 
   const handleStart = () => {
     gameBoardRef.current?.start();
     setIsPlaying(true);
+    setIsPaused(false);
+  };
+
+  const handlePause = () => {
+    if (isPaused === false) {
+      setIsPaused(true);
+    } else {
+      setIsPaused(false);
+    }
   };
 
   // Guardar puntuación en Supabase
@@ -117,23 +127,48 @@ export default function Home() {
             key={gameKey}
             ref={gameBoardRef}
             isPlaying={isPlaying}
+            isPaused={isPaused}
             onScoreChange={setCurrentScore}
             onLineChange={setCurrentLines}
             onNextPieceChange={setNextPiece}
             onGameOver={handleGameOver}
           />
           <div className="flex flex-col items-center gap-6 min-w-[140px]">
-            {!isPlaying && (
-              <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-2">
-                <button
-                  onClick={handleStart}
-                  disabled={isPlaying}
-                  className="px-6 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-green-500/20 border border-green-500/50 cursor-pointer flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <span>▶️</span> Iniciar
-                </button>
-              </div>
-            )}
+            <div className="flex flex-col gap-6">
+              {!isPlaying && (
+                <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-2">
+                  <button
+                    onClick={handleStart}
+                    disabled={isPlaying}
+                    className="px-6 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-green-500/20 border border-green-500/50 cursor-pointer flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span>▶️</span> Iniciar
+                  </button>
+                </div>
+              )}
+              {isPlaying && (
+                <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-2">
+                  <button
+                    onClick={handlePause}
+                    className={
+                      !isPaused
+                        ? "px-6 py-2.5 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white rounded-xl text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-red-500/20 border border-red-500/50 cursor-pointer flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        : "px-6 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-green-500/20 border border-green-500/50 cursor-pointer flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    }
+                  >
+                    {isPaused ? (
+                      <>
+                        <span>▶️</span>Reaundar
+                      </>
+                    ) : (
+                      <>
+                        <span>⏸️</span>Pausar
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
             <div className="bg-gray-700/50 p-4 rounded-2xl border border-gray-600 w-full">
               <p className="text-xs uppercase tracking-wider text-gray-400 text-center mb-2">
                 Siguiente
